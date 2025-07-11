@@ -102,6 +102,8 @@ class Client(Node):
 
         # TODO [low]: change to receive method in Node
         def listen_for_messages():
+            last_receive_time = time.time()
+            TIMEOUT_REASSEMBLY = 5.0  # seconds
             while True:
                 try:
                     segment, addr, checksum_valid = self._Node__listen_recv(timeout=1)
@@ -169,12 +171,28 @@ class Client(Node):
                                 self.connections.pop((self.server_ip, self.server_port), None)
 
                 except Exception as e:
+                    if self.receive_buffer and time.time() - last_receive_time > TIMEOUT_REASSEMBLY:
+                        # If nothing received for timeout, try to reassemble anyway
+                        self.reassemble_and_display()
+                        self.receive_buffer.clear()
                     continue
         
         listener_thread = threading.Thread(target=listen_for_messages)
         listener_thread.daemon = True
         listener_thread.start()
 
+    def reassemble_and_display(self):
+        segments = self.receive_buffer
+        if not segments:
+            return
+        try:
+            full_message = b''.join(
+                segments[seq].get_data() for seq in sorted(segments)
+            )
+            username = next(iter(segments.values())).get_username()
+            self.messages.append(MessageInfo(username, datetime.now(), full_message.decode(errors='ignore')))
+        except Exception as e:
+            print(f"[!] Failed to reassemble message: {e}")
 
     def send_private_message(self, target_port: int, message: str):
         formatted_message = f"@{target_port}:{message}"

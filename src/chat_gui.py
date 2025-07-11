@@ -205,13 +205,13 @@ class ChatGUI:
         self.entry.bind('<FocusOut>', self.on_entry_focus_out)
 
     def on_entry_focus_in(self, event):
-        if self.entry.get() == "Type your message here...":
+        if self.entry.get() == ".":
             self.entry.delete(0, tk.END)
             self.entry.config(fg='#2c3e50')
 
     def on_entry_focus_out(self, event):
         if not self.entry.get():
-            self.entry.insert(0, "Type your message here...")
+            self.entry.insert(0, "")
             self.entry.config(fg='#95a5a6')
 
     def insert_emote(self, emote):
@@ -220,7 +220,7 @@ class ChatGUI:
         current_text = self.entry.get()
         
         # Clear placeholder if present
-        if current_text == "Type your message here...":
+        if current_text == "":
             self.entry.delete(0, tk.END)
             self.entry.config(fg='#2c3e50')
             current_text = ""
@@ -243,10 +243,10 @@ class ChatGUI:
     def send_message(self, event=None):
         """Send message from entry field"""
         message = self.entry.get().strip()
-        if message and message != "Type your message here...":
+        if message and message != "":
             self.client.send_broadcast_message(message)
             self.entry.delete(0, tk.END)
-            self.entry.insert(0, "Type your message here...")
+            self.entry.insert(0, "")
             self.entry.config(fg='#95a5a6')
 
     def get_user_color(self, username):

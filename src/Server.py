@@ -15,6 +15,22 @@ from datetime import datetime
 from lib.Constant import TIMEOUT_LISTEN, MESSAGES_LIMIT
 from typing import List
 
+EMOTICONS = {
+    ":smile:": "😊",
+    ":sad:": "😢",
+    ":laugh:": "😂",
+    ":grin:": "😁",
+    ":cool:": "😎",
+    ":cry:": "😭",
+    ":sleeping:": "😴",
+    ":heart:": "❤️",
+    ":wink:": "😉",
+    ":angry:": "😠",
+    ":surprise:": "😲",
+    ":thumbsup:": "👍",
+    ":wave:": "👋"
+}
+
 class Server(Node):
     def __init__(self, ip: str, port: int,  kill_password: str = KILL_PASSWORD):
         super().__init__("Server", ip, port)
@@ -189,6 +205,7 @@ class Server(Node):
     
             # Print final message
             full_message_str = full_message.decode(errors='ignore')
+            full_message_str = self.replace_emoticons(full_message_str)
             print(f"[O] Full message from {ip_dest}:{port_dest}: {full_message_str}")
 
             if self.handle_command(ip_dest, port_dest, segment.get_username(), full_message_str):
@@ -269,6 +286,11 @@ class Server(Node):
             return True
         return False
     
+    def replace_emoticons(self, message: str) -> str:
+        for text_emoticon, emoji in EMOTICONS.items():
+            message = message.replace(text_emoticon, emoji)
+        return message
+    
     def broadcast(self, messageInfo: MessageInfo):
         # print(f"[DEBUG] Broadcasting message to {len(self.connections)} clients: '{message}'")
         
@@ -320,6 +342,8 @@ class Server(Node):
                 self.connections.pop(key, None)
 
             time.sleep(5)  # periksa tiap 5 detik
+
+            
     def remove_client(self, ip: str, port: int):
         key = (ip, port)
         if key not in self.connections:
